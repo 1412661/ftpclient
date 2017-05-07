@@ -1,10 +1,10 @@
 # simple-ftp-client
 
-## Docs
+### Docs
 
 * [List of raw FTP commands](http://www.nsftools.com/tips/RawFTP.htm)
 
-## FTP Server to be used for testing
+### FTP Server to be used for testing
 
 * Host: http://nhom10.gomakers.vn
 * Username: nhom10
