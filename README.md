@@ -1,4 +1,11 @@
-# simple-ftp-server
+# simple-ftp-client
+
+## Docs
 
 * [List of raw FTP commands](http://www.nsftools.com/tips/RawFTP.htm)
-* FTP Client to be used for testing: [File Zilla](https://filezilla-project.org/)
+
+## FTP Server to be used for testing
+
+* Host: http://nhom10.gomakers.vn
+* Username: nhom10
+* Password: S3cureHCMUS-nhom10
