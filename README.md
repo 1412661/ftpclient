@@ -13,4 +13,4 @@
 
 ### FTP Reply code
 
-* [List_of_FTP_server_return_codes](https://en.wikipedia.org/wiki/List_of_FTP_server_return_codes)
+* [List of FTP server return codes](https://en.wikipedia.org/wiki/List_of_FTP_server_return_codes)
