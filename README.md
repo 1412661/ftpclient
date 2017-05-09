@@ -4,6 +4,7 @@
 
 * [List of raw FTP commands](http://www.nsftools.com/tips/RawFTP.htm)
 * [List of FTP commands](https://en.wikipedia.org/wiki/List_of_FTP_commands)
+* [Active FTP vs. Passive FTP, a Definitive Explanation](http://www.slacksite.com/other/ftp.html)
 
 ### FTP Server to be used for testing
 
