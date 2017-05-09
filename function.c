@@ -36,6 +36,10 @@ char* clone(char* buffer, unsigned int size, unsigned int padding)
     return memcpy((char*)malloc(sizeof(char)*(size+padding)), buffer, size);
 }
 
+int establishFTP(struct FTP* ftp)
+{
+}
+
 
 char* ask(char* server_ip, int server_port, char* msg, int* byte)
 {
@@ -89,3 +93,44 @@ char* ask(char* server_ip, int server_port, char* msg, int* byte)
 
     return data;
 }
+
+int getPortListen(struct Socket* s)
+{
+	if (s == NULL)
+	{
+		printf("[WARN] getPortListen(): NULL input\n");
+		return 1;
+	}
+
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        printf("[ERROR] socket(): Could not initialize socket");
+
+    struct sockaddr_in serv_addr;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // When port is used by another program or not release by OS,
+    // switch to another port (port--)
+    while (1)
+    {
+        serv_addr.sin_port = htons(s->port);
+        if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+            printf("[ERROR] bind(): could not bind socket at port %d\n", s->port--);
+        else
+            break;
+    }
+
+    if (listen(sockfd, BUFFSIZE_DATA) != 0)
+	{
+		printf("[ERROR] listen(): Could not listen at port %d\n", s->port);
+		return 1;
+	} else
+	{
+		printf("[INFO] listen(): Listening at port %d\n", s->port);
+        s->sockfd = sockfd;
+        return 0;
+	}
+}
+
+

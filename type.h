@@ -20,6 +20,16 @@ struct Data
 	int length;
 };
 
+struct FTP
+{
+    char* user;
+    char* pass;
+    char* host;
+
+    struct Computer client;
+    struct Computer server;
+    int mode;
+};
 
 #endif // _TYPE_H_
 

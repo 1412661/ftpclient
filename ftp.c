@@ -12,43 +12,42 @@
 #include "type.h"
 #include "function.h"
 
-
-char* FTP_HOST;
-char* FTP_USER[BUFFSIZE_VAR];
-char* FTP_PASS[BUFFSIZE_VAR];
-
-struct Computer Client;
-struct Computer Server;
-
-// Default trasmission mode is active
-int FTP_MODE = FTP_ACTIVE;
-
-
+// All info about the current connection
+struct FTP ftp;
 
 int main(int argc,char *argv[])
 {
+	char* response;
+
     if (argc == 2)
 	{
-        FTP_HOST = argv[1];
+        ftp.host = argv[1];
 	} else
 	{
-        printf("[ERROR] Please provide FTP_HOST\n");
+        printf("[ERROR] Please provide hostname\n");
         return 1;
 	}
 
     printf("[INFO] Welcome to Simle FTP Client\n");
-    printf("[INFO] FTP Hostname: %s\n", FTP_HOST);
+    printf("[INFO] FTP Hostname: %s\n", ftp.host);
 
-    int byte;
-    char* welcome = ask(FTP_HOST, SERVER_CMD_PORT, "", &byte);
+    // Default FTP mode is active
+    ftp.mode = FTP_ACTIVE;
 
-    if (welcome != NULL)
-		printf("[INFO] Connected to %s\n%s", FTP_HOST, welcome);
+	struct Socket s;
+	s.port = 1234;
+
+    getPortListen(&s);
+
+
+    /*response = establishFTP(&ftp);
+    if (response != NULL)
+		printf("[INFO] Connected to %s\n%s", ftp.host, response);
 	else
 	{
         printf("[ERROR] Could not connect to server.\n");
         return 1;
-	}
+	}*/
 
 
 

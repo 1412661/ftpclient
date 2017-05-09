@@ -36,6 +36,7 @@
 		</Compiler>
 		<Unit filename="Makefile" />
 		<Unit filename="README.md" />
+		<Unit filename="clean.sh" />
 		<Unit filename="const.h" />
 		<Unit filename="ftp.c">
 			<Option compilerVar="CC" />
@@ -44,6 +45,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="function.h" />
+		<Unit filename="type.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
