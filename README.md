@@ -6,6 +6,7 @@
 * [List of FTP commands](https://en.wikipedia.org/wiki/List_of_FTP_commands)
 * [Active FTP vs. Passive FTP, a Definitive Explanation](http://www.slacksite.com/other/ftp.html)
 * [Source code in The Linux Socket Programming book](http://www.cs.utah.edu/~swalton/listings/sockets/programs/)
+* [How the Linux kernel does the source port allocation](https://idea.popcount.org/2014-04-03-bind-before-connect/)
 
 ### FTP Server to be used for testing
 
