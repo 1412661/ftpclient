@@ -6,7 +6,7 @@
 #define BUFFSIZE_VAR	200
 #define BUFFSIZE_DATA	1000
 
-#define SERVER_CMD_PORT		21
+#define FTP_CMD_PORT	21
 
 
 #define FTP_ACTIVE		0

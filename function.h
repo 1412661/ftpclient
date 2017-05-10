@@ -17,8 +17,12 @@ char* clone(char* buffer, unsigned int size, unsigned int padding);
 char* ask(char* server_ip, int server_port, char* msg, int* byte);
 
 
-int establishFTP(struct FTP* ftp);
+int ftp_connect(struct FTPClient* ftp);
 
+int portConnect(struct Socket* s, char* host, int port);
+int portListen(struct Socket* s);
+
+/*
 int authFTP(char* user, char* pass);
 
 int closeFTP(struct Computer c1, struct Computer c2);
@@ -27,6 +31,6 @@ int closeFTP(struct Computer c1, struct Computer c2);
 
 struct Data sendCmd(struct Computer client, struct Computer server, int mode, struct Data data);
 struct Data sendData(struct Computer c1, struct Computer c2, int mode, struct Data data);
-int getPortListen(struct Socket* s);
+int getPortListen(struct Socket* s);*/
 
 #endif // _FUNCTION_H_

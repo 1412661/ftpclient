@@ -7,7 +7,7 @@ LIBS =
 # #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 
 IGNORE = -Wno-incompatible-pointer-types -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
-ARGS = -std=c99
+ARGS = -std=gnu99
 
 all:
 	$(CC) $(ARGS) -c function.c $(LIBS)

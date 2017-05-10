@@ -8,26 +8,20 @@ struct Socket
     int port;
 };
 
-struct Computer
-{
-    struct Socket cmd;
-    struct Socket data;
-};
-
 struct Data
 {
 	char* buff;
 	int length;
 };
 
-struct FTP
+struct FTPClient
 {
     char* user;
     char* pass;
     char* host;
 
-    struct Computer client;
-    struct Computer server;
+    struct Socket data;
+    struct Socket cmd;
     int mode;
 };
 

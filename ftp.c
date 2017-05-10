@@ -13,7 +13,7 @@
 #include "function.h"
 
 // All info about the current connection
-struct FTP ftp;
+struct FTPClient ftp;
 
 int main(int argc,char *argv[])
 {
@@ -34,10 +34,15 @@ int main(int argc,char *argv[])
     // Default FTP mode is active
     ftp.mode = FTP_ACTIVE;
 
-	struct Socket s;
-	s.port = 1234;
+	if (ftp_connect(&ftp) == 0)
+	{
+		printf("[INFO] Connected !.\n");
+	}
 
-    getPortListen(&s);
+	//struct Socket s;
+	//s.port = 1234;
+
+    //getPortListen(&s);
 
 
     /*response = establishFTP(&ftp);
