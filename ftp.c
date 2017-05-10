@@ -34,30 +34,11 @@ int main(int argc,char *argv[])
     // Default FTP mode is active
     ftp.mode = FTP_ACTIVE;
 
-	if (ftp_connect(&ftp) == 0)
-	{
-		printf("[INFO] Connected !.\n");
-	}
+	if (ftp_connect(&ftp))
+		return 1;
 
-	//struct Socket s;
-	//s.port = 1234;
-
-    //getPortListen(&s);
-
-
-    /*response = establishFTP(&ftp);
-    if (response != NULL)
-		printf("[INFO] Connected to %s\n%s", ftp.host, response);
-	else
-	{
-        printf("[ERROR] Could not connect to server.\n");
-        return 1;
-	}*/
-
-
-
-    //printf("Please enter username: ");
+	if (ftp_auth(&ftp))
+		return 1;
 
     return 0;
-
 }

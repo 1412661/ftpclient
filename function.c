@@ -56,69 +56,38 @@ int ftp_connect(struct FTPClient* ftp)
 		return 1;
 	}
 
+	char *hello = ftp_cmd(ftp, NULL, 0);
+    printf("%s", hello);
+    free(hello);
+
 	return 0;
 }
 
 int ftp_auth(struct FTPClient* ftp)
 {
+    ftp->user = (char*)malloc(BUFFSIZE_VAR);
+    ftp->pass = (char*)malloc(BUFFSIZE_VAR);
+    char* response;
+    char cmd[BUFFSIZE_VAR];
 
+    printf("Username: ");
+    fgets(ftp->user, BUFFSIZE_VAR, stdin);
+	sprintf(cmd, "USER %s\r\n", ftp->user);
+	response = ftp_cmd(ftp, cmd, strlen(cmd));
+    printf("%s", response);		// Don't care about return code. Always 331 :3
+
+    strcpy(ftp->pass, getpass("Password: "));
+	sprintf(cmd, "PASS %s\r\n", ftp->pass);
+	response = ftp_cmd(ftp, cmd, strlen(cmd));
+    printf("%s", response);
+
+    // return code
+    int rc;
+    sscanf(response, "%d", &rc);
+    if (rc != 230)
+        return 1;
+	else return 0;
 }
-
-
-char* ask(char* server_ip, int server_port, char* msg, int* byte)
-{
-    int n;
-
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
-        printf("[ERROR] socket(): Could not open socket.");
-        return NULL;
-    }
-
-    struct hostent *server = gethostbyname(server_ip);
-    if (server == NULL)
-    {
-        printf("[ERROR] gethostbyname(): Invalid IP address.");
-        return NULL;
-    }
-
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    memmove((char*)&serv_addr.sin_addr.s_addr, (char*)server->h_addr_list[0], server->h_length);
-    serv_addr.sin_port = htons(server_port);
-    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
-    {
-        printf("[ERROR] connect(): Could not connect to server %s:%d\n", server_ip, server_port);
-        return NULL;
-    }
-
-    struct sockaddr_in sin;
-	socklen_t len = sizeof(sin);
-	if (getsockname(sockfd, (struct sockaddr*)&sin, &len) == -1)
-		perror("getsockname");
-	else
-		printf("[Client] Using port number %d\n", ntohs(sin.sin_port));
-
-
-    n = write(sockfd, msg, strlen(msg));
-    if (n < 0)
-    {
-        printf("[ERROR] write(): Could not write data to socket");
-        return NULL;
-    }
-
-    char* data = (char*)malloc(BUFFSIZE_DATA);
-    memset(data, 0, BUFFSIZE_DATA);
-    n = read(sockfd, data, BUFFSIZE_DATA);
-
-	shutdown(sockfd, SHUT_RDWR);
-    close(sockfd);
-
-    return data;
-}
-
-
 
 // http://www.binarytides.com/hostname-to-ip-address-c-sockets-linux/
 // This function is a modified version of the hostname_to_ip()
@@ -233,3 +202,21 @@ int portListen(struct Socket* s)
 }
 
 
+char* ftp_cmd(struct FTPClient* ftp, char* data, int len)
+{
+    if (data != NULL)
+	{
+		len = write(ftp->cmd.sockfd, data, len);
+		if (len < 0)
+		{
+            printf("[ERROR] write(): Could not write data to socket\n");
+            return NULL;
+		}
+	}
+
+	char* response = (char*)malloc(BUFFSIZE_VAR);
+    memset(response, 0, BUFFSIZE_VAR);
+    read(ftp->cmd.sockfd, response, BUFFSIZE_VAR);
+
+	return response;
+};
