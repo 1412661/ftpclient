@@ -15,18 +15,19 @@
 #include <math.h>
 
 
-#include<stdio.h> //printf
-#include<string.h> //memset
-#include<stdlib.h> //for exit(0);
-#include<sys/socket.h>
-#include<errno.h> //For errno - the error number
-#include<netdb.h> //hostent
-#include<arpa/inet.h>
+#include <stdio.h> //printf
+#include <string.h> //memset
+#include <stdlib.h> //for exit(0);
+#include <sys/socket.h>
+#include <errno.h> //For errno - the error number
+#include <netdb.h> //hostent
+#include <arpa/inet.h>
 
 
 #include "const.h"
 #include "type.h"
 #include "function.h"
+#include "net.h"
 
 /**
  * Clone a memory space
@@ -47,10 +48,14 @@ char* clone(char* buffer, unsigned int size, unsigned int padding)
     return memcpy((char*)malloc(sizeof(char)*(size+padding)), buffer, size);
 }
 
+/**
+ * Connect to FTP server and return hello message
+ * @param FTP infomation
+ * @return 0 if success, 1 if fail.
+ */
 int ftp_connect(struct FTPClient* ftp)
 {
-	//ftp->host = "abc.com";
-    if (portConnect(&(ftp->cmd), ftp->host, FTP_CMD_PORT))
+    if (portConnect(&(ftp->cmd.sockfd), &(ftp->cmd.port), ftp->host, FTP_CMD_PORT))
 	{
 		printf("[ERROR] Could not connect to FTP service at %s\n", ftp->host);
 		return 1;
@@ -63,6 +68,11 @@ int ftp_connect(struct FTPClient* ftp)
 	return 0;
 }
 
+/**
+ * FTP Authentication
+ * @param FTP infomation
+ * @return 0 if success, 1 if fail.
+ */
 int ftp_auth(struct FTPClient* ftp)
 {
     ftp->user = (char*)malloc(BUFFSIZE_VAR);
@@ -84,124 +94,55 @@ int ftp_auth(struct FTPClient* ftp)
     // return code
     int rc;
     sscanf(response, "%d", &rc);
-    if (rc != 230)
+    if (rc != 230)			// FTP command 230 indicate
         return 1;
 	else return 0;
 }
 
-// http://www.binarytides.com/hostname-to-ip-address-c-sockets-linux/
-// This function is a modified version of the hostname_to_ip()
-// Credit goes to me 1412661
-int getaddrbyname(char *hostname)
+/**
+ * Switch FTP mode between active and passive
+ * @param FTP infomation
+ * @param Mode to be switched
+ * @return 0 if success, 1 if fail.
+ */
+int ftp_mode(struct FTPClient* ftp, int mode)
 {
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
-    hints.ai_socktype = SOCK_STREAM;
+    // Default FTP mode is active
+    if (ftp->mode == 0)
+        ftp->mode = FTP_ACTIVE;
 
-    int rv;
-    struct addrinfo *server;
-    if ((rv = getaddrinfo(hostname , "http" , &hints , &server)) != 0)
+	// Exception of this function
+
+    if (ftp->data.sockfd && ftp->mode == mode)
+		return 0;
+
+    switch (mode)
     {
-        printf("[ERROR] getaddrinfo(): %s\n", gai_strerror(rv));
-        return 0;
+		case FTP_ACTIVE:
+            if (ftp->mode == FTP_PASSIVE)
+			{
+
+			}
+			break;
+		case FTP_PASSIVE:
+			if (ftp->mode == FTP_PASSIVE)
+			{
+
+			}
+			break;
+		default:
+			printf("[ERROR] ftp_mode(): mode %d not valid\n", mode);
+			return 1;
     }
-
-    struct sockaddr_in *h = (struct sockaddr_in*)server->ai_addr;
-	int ip = h->sin_addr.s_addr;
-
-    freeaddrinfo(server);
-
-    return ip;
 }
 
-
-int portConnect(struct Socket* s, char* host, int port)
-{
-	if (s == NULL || host == NULL || port == 0)
-	{
-		printf("[WARN] portConnect(): NULL input\n");
-		return 1;
-	}
-
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
-        printf("[ERROR] socket(): Could not open socket.");
-        return 1;
-    }
-
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-    serv_addr.sin_addr.s_addr = getaddrbyname(host);
-    if (serv_addr.sin_addr.s_addr == 0)
-	{
-        printf("[ERROR] getaddrbyname(): Could not resolve hostname in to IP address.\n");
-        return 1;
-	}
-
-    printf("[INFO] Resolved: %s -> %s\n", host, inet_ntoa(serv_addr.sin_addr));
-
-    if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
-    {
-        printf("[ERROR] connect(): Could not connect to %s:%d\n", host, port);
-        return 1;
-    }
-
-    struct sockaddr_in sin;
-	socklen_t len = sizeof(sin);
-	if (getsockname(sockfd, (struct sockaddr*)&sin, &len) == -1)
-	{
-		printf("[ERROR] getsockname() failed.\n");
-		return 1;
-	}
-
-    s->port = ntohs(sin.sin_port);
-	s->sockfd = sockfd;
-
-    return 0;
-}
-
-int portListen(struct Socket* s)
-{
-	if (s == NULL)
-	{
-		printf("[WARN] portListen(): NULL input\n");
-		return 1;
-	}
-
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-        printf("[ERROR] socket(): Could not initialize socket");
-
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-
-    // When port is used by another program or not release by OS,
-    // switch to another port (port--)
-    while (1)
-    {
-        serv_addr.sin_port = htons(s->port);
-        if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-            printf("[ERROR] bind(): could not bind socket at port %d\n", s->port--);
-        else
-            break;
-    }
-
-    if (listen(sockfd, BUFFSIZE_DATA) != 0)
-	{
-		printf("[ERROR] listen(): Could not listen at port %d\n", s->port);
-		return 1;
-	}
-
-	s->sockfd = sockfd;
-
-	return 0;
-}
-
-
+/**
+ * FTP send & receive command
+ * @param FTP infomation
+ * @param command to be sent, can be NULL
+ * @param length of command
+ * @return data returned by server
+ */
 char* ftp_cmd(struct FTPClient* ftp, char* data, int len)
 {
     if (data != NULL)
@@ -219,4 +160,4 @@ char* ftp_cmd(struct FTPClient* ftp, char* data, int len)
     read(ftp->cmd.sockfd, response, BUFFSIZE_VAR);
 
 	return response;
-};
+}

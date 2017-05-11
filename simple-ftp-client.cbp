@@ -45,6 +45,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="function.h" />
+		<Unit filename="net.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="net.h" />
 		<Unit filename="type.h" />
 		<Extensions>
 			<envvars />

@@ -11,6 +11,7 @@
 #include "const.h"
 #include "type.h"
 #include "function.h"
+#include "net.h"
 
 // All info about the current connection
 struct FTPClient ftp;
@@ -40,5 +41,13 @@ int main(int argc,char *argv[])
 	if (ftp_auth(&ftp))
 		return 1;
 
-    return 0;
+    ftp_mode(&ftp, FTP_ACTIVE);
+
+    /*while (ftp_loop(&ftp))
+	{
+	}
+
+	ftp_close(&ftp);*/
+
+	return 0;
 }

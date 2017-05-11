@@ -12,19 +12,22 @@ ARGS = -std=gnu99
 all:
 	$(CC) $(ARGS) -c function.c $(LIBS)
 	$(CC) $(ARGS) -c ftp.c $(LIBS)
-	$(CC) $(IGNORE) $(ARGS) -o ftp ftp.o function.o $(LIBS)
+	$(CC) $(ARGS) -c net.c $(LIBS)
+	$(CC) $(IGNORE) $(ARGS) -o ftp ftp.o function.o net.o $(LIBS)
 	@rm *.o
 
 Release:
 	$(CC) $(ARGS) -c function.c $(LIBS)
 	$(CC) $(ARGS) -c ftp.c $(LIBS)
-	$(CC) $(IGNORE) $(ARGS) -o ftp ftp.o function.o $(LIBS)
+	$(CC) $(ARGS) -c net.c $(LIBS)
+	$(CC) $(IGNORE) $(ARGS) -o ftp ftp.o function.o net.o $(LIBS)
 	@rm *.o
 
 Debug:
 	$(CC) $(ARGS) -g -c function.c $(LIBS)
 	$(CC) $(ARGS) -g -c ftp.c $(LIBS)
-	$(CC) $(IGNORE) $(ARGS) -g -o ftp ftp.o function.o $(LIBS)
+	$(CC) $(ARGS) -g -c net.c $(LIBS)
+	$(CC) $(IGNORE) $(ARGS) -g -o ftp ftp.o function.o net.o $(LIBS)
 	@rm *.o
 
 cleanDebug:
