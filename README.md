@@ -11,9 +11,9 @@
 
 ### FTP Server to be used for testing
 
-* Host: http://nhom10.gomakers.vn
-* Username: nhom10
-* Password: S3cureHCMUS-nhom10
+* Host: <code>files.000webhost.com</code>
+* Username: <code>123bao</code>
+* Password: <code>Admin2355</code>
 
 ### FTP Reply code
 
