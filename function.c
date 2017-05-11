@@ -113,27 +113,57 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 
 	// Exception of this function
 
+	// Don't re-establish connection
     if (ftp->data.sockfd && ftp->mode == mode)
 		return 0;
 
-    switch (mode)
-    {
-		case FTP_ACTIVE:
-            if (ftp->mode == FTP_PASSIVE)
-			{
+	// Invalid mode
+    if (mode != FTP_ACTIVE && mode != FTP_PASSIVE)
+		return 1;
 
-			}
-			break;
-		case FTP_PASSIVE:
-			if (ftp->mode == FTP_PASSIVE)
-			{
+	// Working here
+	char cmd[BUFFSIZE_VAR];
+    uint8_t *ipv4;
+    uint8_t *port;
+    char* response;
+	// return code
+	int rc;
 
-			}
-			break;
-		default:
-			printf("[ERROR] ftp_mode(): mode %d not valid\n", mode);
+    if (mode == FTP_ACTIVE)
+	{
+		ftp->data.port = 0;		// Choose random port to listen
+        portListen(&(ftp->data.sockfd), &(ftp->data.port));
+
+        printf("[INFO] Client use data port %d\n", ftp->data.port);
+
+		// Ref: https://linux.die.net/man/3/inet_aton
+		struct in_addr addr;
+		char* ip = getLocalIP();
+        if (ip == NULL)
+		{
+            printf("[ERROR] ftp_mode(): No IPv4 associated\n");
+            return 1;
+		}
+		inet_aton(ip, &addr);
+
+		uint8_t *ipv4 = (uint8_t *)&addr.s_addr;
+		uint8_t *port = (uint8_t *)&(ftp->data.port);
+
+        sprintf(cmd, "PORT %d,%d,%d,%d,%d,%d\r\n", ipv4[0], ipv4[1], ipv4[2], ipv4[3], port[0], port[1]);
+
+        response = ftp_cmd(ftp, cmd, strlen(cmd));
+        printf("%s", response);
+
+		sscanf(response, "%d", &rc);
+		if (rc != 150)			// FTP command 230 indicate
 			return 1;
-    }
+		else return 0;
+	}
+
+    if (mode == FTP_PASSIVE)
+	{
+		// core here
+	}
 }
 
 /**

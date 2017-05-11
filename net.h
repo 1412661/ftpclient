@@ -34,4 +34,20 @@ int portConnect(int* i_sockfd, int* i_port, char* host, int port);
  */
 int portListen(int* i_sockfd, int* i_port);
 
+
+/**
+ * Get local IP address (exclude 127.0.0.1)
+ * @return local IP address (exclude 127.0.0.1) or NULl
+ */
+ // Ref1: http://man7.org/linux/man-pages/man3/getifaddrs.3.html
+ // Ref2: https://linux.die.net/man/3/inet_aton
+char* getLocalIP();
+
+/**
+ * Get port from socket descriptor
+ * @param socket descriptor
+ * @return port associated with socket descriptor, 0 if fail
+ */
+int getPort(int sockfd);
+
 #endif // _NET_H_
