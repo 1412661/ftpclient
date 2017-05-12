@@ -166,6 +166,38 @@ int ftp_mode(struct FTPClient* ftp, int mode)
     if (mode == FTP_PASSIVE)
 	{
 		// core here
+        sprintf(cmd, "PASV\r\n");
+        response = ftp_cmd(ftp,cmd,strlen(cmd));
+        printf("%s\n",response);
+        char *pt = NULL;
+        int dataSock=0;
+        int svPort=0;
+		pt = strtok(response," ");
+		for(int i=0; i < 4;i++)
+			pt = strtok(NULL,",");
+		
+		svPort = atoi(pt = (strtok(NULL,","))) * 256;
+		svPort = svPort + atoi(pt = strtok(NULL,"\0"));
+		
+		printf("Port received though PORT command return: %d\n",svPort);
+        struct sockaddr_in server;
+        bzero(&server, sizeof(server));
+		server.sin_family = AF_INET;
+		server.sin_port = htons(svPort);
+		
+		if ( inet_aton(SERV_ADDR, &server.sin_addr.s_addr) == 0 )
+		{
+			perror(SERV_ADDR);
+			exit(errno);
+		}
+
+        if ( connect(dataSock, (struct sockaddr*)&server, sizeof(server)) != 0 )
+		{
+			perror("Connect can't be established");
+			exit(errno);
+		}
+		
+		printf("Connected to Server with PASSIVE MODE!\n");
 	}
 }
 
