@@ -167,34 +167,28 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 	{
 		// core here
         sprintf(cmd, "PASV\r\n");
-        response = ftp_cmd(ftp,cmd,strlen(cmd));
-        printf("%s\n",response);
-        char *pt = NULL;
-        int dataSock=0;
+        response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+        printf("%s", response);
         int svPort=0;
-		pt = strtok(response," ");
-		for(int i=0; i < 4;i++)
-			pt = strtok(NULL,",");
-		
-		svPort = atoi(pt = (strtok(NULL,","))) * 256;
-		svPort = svPort + atoi(pt = strtok(NULL,"\0"));
-		
+		int port[2],ip[4];
+		sscanf(response,"227 Entering Passive Mode (%d,%d,%d,%d,%d,%d).\r",ip[0],ip[1],ip[2],ip[3],port[0],port[1]);
+		svPort=port[0]*256+port[1];
+		// char *pt = NULL;
+		// pt = strtok(response," ");
+		// for(int i=0; i < 4;i++)
+		// 	pt = strtok(NULL,",");
+		// pt = (strtok(NULL,","));
+		// int temp=atoi(pt);
+		// printf("%d\n",temp);
+		// svPort = temp * 256;
+		// temp = atoi(pt = strtok(NULL,"\0"));
+		// svPort = svPort + temp;
+		// printf("%d\n",temp);
 		printf("Port received though PORT command return: %d\n",svPort);
-        struct sockaddr_in server;
-        bzero(&server, sizeof(server));
-		server.sin_family = AF_INET;
-		server.sin_port = htons(svPort);
-		
-		if ( inet_aton(SERV_ADDR, &server.sin_addr.s_addr) == 0 )
+		if (portConnect(&(ftp->cmd.sockfd), 0, ftp->host, svPort))
 		{
-			perror(SERV_ADDR);
-			exit(errno);
-		}
-
-        if ( connect(dataSock, (struct sockaddr*)&server, sizeof(server)) != 0 )
-		{
-			perror("Connect can't be established");
-			exit(errno);
+			printf("[ERROR] Could not connect to FTP service at %s\n", ftp->host);
+			return 1;
 		}
 		
 		printf("Connected to Server with PASSIVE MODE!\n");
