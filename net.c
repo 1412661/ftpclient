@@ -316,3 +316,23 @@ int getPort(int sockfd)
         return 0;
     } else return ntohs(sin.sin_port);
 }
+
+/**
+ * Check status of a socket
+ * @param socket descriptor
+ * @return -1 if invalid socket
+ * @return 0  if listening-socket
+ * @return 1  if non-listening socket
+ */
+// Ref: http://stackoverflow.com/questions/10260600/check-if-socket-is-listening-in-c
+enum SOCK_STATUS sockStatus(int sockfd)
+{
+	int val;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sockfd, SOL_SOCKET, SO_ACCEPTCONN, &val, &len) == -1)
+		return SOCK_FREE;
+	else if (val)
+		return SOCK_LISTEN;
+	else
+		return SOCK_NON_LISTEN;
+}

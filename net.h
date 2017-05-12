@@ -2,6 +2,7 @@
 #define _NET_H_
 
 #include <stdint.h>
+#include "const.h"
 #include "type.h"
 
 // http://www.binarytides.com/hostname-to-ip-address-c-sockets-linux/
@@ -49,5 +50,15 @@ char* getLocalIP();
  * @return port associated with socket descriptor, 0 if fail
  */
 int getPort(int sockfd);
+
+/**
+ * Check status of a socket
+ * @param socket descriptor
+ * @return -1 if invalid socket
+ * @return 0  if listening-socket
+ * @return 1  if non-listening socket
+ */
+// Ref: http://stackoverflow.com/questions/10260600/check-if-socket-is-listening-in-c
+enum SOCK_STATUS sockStatus(int sockfd);
 
 #endif // _NET_H_

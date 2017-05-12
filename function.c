@@ -22,6 +22,7 @@
 #include <errno.h> //For errno - the error number
 #include <netdb.h> //hostent
 #include <arpa/inet.h>
+#include <ctype.h>
 
 
 #include "const.h"
@@ -61,7 +62,7 @@ int ftp_connect(struct FTPClient* ftp)
 		return 1;
 	}
 
-	char *hello = ftp_cmd(ftp, NULL, 0);
+	char *hello = ftp_comm(ftp->cmd.sockfd, NULL, 0);
     printf("%s", hello);
     free(hello);
 
@@ -80,15 +81,18 @@ int ftp_auth(struct FTPClient* ftp)
     char* response;
     char cmd[BUFFSIZE_VAR];
 
-    printf("Username: ");
-    fgets(ftp->user, BUFFSIZE_VAR, stdin);
+    printf("Username: \n");
+    //fgets(ftp->user, BUFFSIZE_VAR, stdin);
+	ftp->user = "123bao";
 	sprintf(cmd, "USER %s\r\n", ftp->user);
-	response = ftp_cmd(ftp, cmd, strlen(cmd));
+	response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
     printf("%s", response);		// Don't care about return code. Always 331 :3
 
-    strcpy(ftp->pass, getpass("Password: "));
+    printf("Password: \n");
+    ftp->pass = "Admin2355";
+    //strcpy(ftp->pass, getpass("Password: "));
 	sprintf(cmd, "PASS %s\r\n", ftp->pass);
-	response = ftp_cmd(ftp, cmd, strlen(cmd));
+	response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
     printf("%s", response);
 
     // return code
@@ -114,7 +118,7 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 	// Exception of this function
 
 	// Don't re-establish connection
-    if (ftp->data.sockfd && ftp->mode == mode)
+    if (sockStatus(ftp->data.sockfd) != SOCK_FREE && ftp->mode == mode)
 		return 0;
 
 	// Invalid mode
@@ -147,15 +151,14 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 		inet_aton(ip, &addr);
 
 		uint8_t *ipv4 = (uint8_t *)&addr.s_addr;
-		uint8_t *port = (uint8_t *)&(ftp->data.port);
 
-        sprintf(cmd, "PORT %d,%d,%d,%d,%d,%d\r\n", ipv4[0], ipv4[1], ipv4[2], ipv4[3], port[0], port[1]);
+        sprintf(cmd, "PORT %d,%d,%d,%d,%d,%d\r\n", ipv4[0], ipv4[1], ipv4[2], ipv4[3], ftp->data.port/256, ftp->data.port%256);
 
-        response = ftp_cmd(ftp, cmd, strlen(cmd));
+        response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
         printf("%s", response);
 
 		sscanf(response, "%d", &rc);
-		if (rc != 150)			// FTP command 230 indicate
+		if (rc != 150)			// FTP command 230 indicate successull login
 			return 1;
 		else return 0;
 	}
@@ -167,27 +170,86 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 }
 
 /**
- * FTP send & receive command
+ * FTP send & receive command/data
  * @param FTP infomation
  * @param command to be sent, can be NULL
  * @param length of command
  * @return data returned by server
  */
-char* ftp_cmd(struct FTPClient* ftp, char* data, int len)
+char* ftp_comm(int sockfd, char* data, int len)
 {
-    if (data != NULL)
-	{
-		len = write(ftp->cmd.sockfd, data, len);
-		if (len < 0)
-		{
-            printf("[ERROR] write(): Could not write data to socket\n");
-            return NULL;
-		}
-	}
+	// Used for SOCK_LISTEN
+	struct sockaddr_in clientaddr;
+	socklen_t addrlen = sizeof(clientaddr);
+
+    switch (sockStatus(sockfd))
+    {
+		case SOCK_FREE:
+			return NULL;
+
+		case SOCK_LISTEN:
+			// If socket is in listen mode. Accept any incomming connection.
+			// sockfd now become client. Dont care about sockfd of the server
+			sockfd = accept(sockfd, (struct sockaddr *) &clientaddr, &addrlen);
+			break;
+
+		case SOCK_NON_LISTEN:
+			if (data != NULL)
+			{
+				len = write(sockfd, data, len);
+				if (len < 0)
+				{
+					printf("[ERROR] write(): Could not write data to socket\n");
+					return NULL;
+				}
+			}
+			break;
+    }
 
 	char* response = (char*)malloc(BUFFSIZE_VAR);
     memset(response, 0, BUFFSIZE_VAR);
-    read(ftp->cmd.sockfd, response, BUFFSIZE_VAR);
+    read(sockfd, response, BUFFSIZE_VAR);
 
 	return response;
+}
+
+int ftp_loop(struct FTPClient *ftp)
+{
+	char input[BUFFSIZE_VAR];
+    char cmd[BUFFSIZE_VAR];
+    char data[BUFFSIZE_DATA];
+
+	//printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+	//printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
+
+	//return 1;
+
+    while (1)
+	{
+        printf("ftp> ");
+        fgets(input, BUFFSIZE_VAR, stdin);
+
+        if (strstr(input, "ls"))
+		{
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+		} else if (strstr(input, "dir"))
+		{
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+		} else if (strstr(input, "pwd"))
+		{
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "PWD\r\n", strlen("PWD\r\n")));
+			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+		} else if (strstr(input, "nlist"))
+		{
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "NLST\r\n", strlen("NLST\r\n")));
+			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+		} else if (strstr(input, "bye"))
+		{
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "QUIT\r\n", strlen("QUIT\r\n")));
+			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+			break;
+		}
+	}
 }

@@ -30,13 +30,13 @@ int ftp_auth(struct FTPClient* ftp);
 
 
 /**
- * FTP send & receive command
+ * FTP send & receive command/data
  * @param FTP infomation
  * @param command to be sent, can be NULL
  * @param length of command
  * @return data returned by server
  */
-char* ftp_cmd(struct FTPClient* ftp, char* data, int len);
+char* ftp_comm(int sockfd, char* data, int len);
 
 
 /**
@@ -48,6 +48,9 @@ char* ftp_cmd(struct FTPClient* ftp, char* data, int len);
 int ftp_mode(struct FTPClient* ftp, int mode);
 
 
+char* upcase(char* str);
+
+int ftp_loop(struct FTPClient *ftp);
 //struct Data ftp_data(struct Computer c1, struct Computer c2, int mode, struct Data data);
 
 #endif // _FUNCTION_H_

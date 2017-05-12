@@ -43,11 +43,9 @@ int main(int argc,char *argv[])
 
     ftp_mode(&ftp, FTP_ACTIVE);
 
-    /*while (ftp_loop(&ftp))
-	{
-	}
+    ftp_loop(&ftp);
 
-	ftp_close(&ftp);*/
+	//ftp_close(&ftp);
 
 	return 0;
 }
