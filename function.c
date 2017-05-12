@@ -219,10 +219,10 @@ int ftp_loop(struct FTPClient *ftp)
     char cmd[BUFFSIZE_VAR];
     char data[BUFFSIZE_DATA];
 
-	//printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
-	//printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
+	printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+	printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
 
-	//return 1;
+	return 1;
 
     while (1)
 	{
