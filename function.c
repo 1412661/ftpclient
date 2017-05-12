@@ -167,6 +167,7 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 	{
 		// core here
         sprintf(cmd, "PASV\r\n");
+
         response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
         printf("%s", response);
         int svPort=0;
@@ -190,7 +191,7 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 			printf("[ERROR] Could not connect to FTP service at %s\n", ftp->host);
 			return 1;
 		}
-		
+
 		printf("Connected to Server with PASSIVE MODE!\n");
 	}
 }
@@ -245,10 +246,10 @@ int ftp_loop(struct FTPClient *ftp)
     char cmd[BUFFSIZE_VAR];
     char data[BUFFSIZE_DATA];
 
-	//printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
-	//printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
+	printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+	printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
 
-	//return 1;
+	return 1;
 
     while (1)
 	{

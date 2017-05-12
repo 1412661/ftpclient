@@ -31,11 +31,13 @@ int ftp_auth(struct FTPClient* ftp);
 
 /**
  * FTP send & receive command/data
- * @param FTP infomation
- * @param command to be sent, can be NULL
+ * @param Socket descriptor
+ * @param command to be sent
  * @param length of command
  * @return data returned by server
  */
+ // Note: ftp_comm() can handle both listening socket & non-listening socket
+ // Note: ftp_comm() doesn't check for invalid socket
 char* ftp_comm(int sockfd, char* data, int len);
 
 
