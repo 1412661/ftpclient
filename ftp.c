@@ -33,7 +33,7 @@ int main(int argc,char *argv[])
     printf("[INFO] FTP Hostname: %s\n", ftp.host);
 
     // Default FTP mode is active
-    ftp.mode = FTP_ACTIVE;
+    ftp.mode = FTP_PASSIVE;
 
 	if (ftp_connect(&ftp))
 		return 1;
@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
 	if (ftp_auth(&ftp))
 		return 1;
 
-    ftp_mode(&ftp, FTP_ACTIVE);
+    ftp_mode(&ftp, ftp.mode);
 
     ftp_loop(&ftp);
 
