@@ -170,23 +170,11 @@ int ftp_mode(struct FTPClient* ftp, int mode)
 
         response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
         printf("%s", response);
-        int svPort=0;
 		int port[2],ip[4];
-		sscanf(response,"227 Entering Passive Mode (%d,%d,%d,%d,%d,%d).\r",ip[0],ip[1],ip[2],ip[3],port[0],port[1]);
-		svPort=port[0]*256+port[1];
-		// char *pt = NULL;
-		// pt = strtok(response," ");
-		// for(int i=0; i < 4;i++)
-		// 	pt = strtok(NULL,",");
-		// pt = (strtok(NULL,","));
-		// int temp=atoi(pt);
-		// printf("%d\n",temp);
-		// svPort = temp * 256;
-		// temp = atoi(pt = strtok(NULL,"\0"));
-		// svPort = svPort + temp;
-		// printf("%d\n",temp);
-		printf("Port received though PORT command return: %d\n",svPort);
-		if (portConnect(&(ftp->cmd.sockfd), 0, ftp->host, svPort))
+		sscanf(response,"227 Entering Passive Mode (%d,%d,%d,%d,%d,%d).\r",&ip[0],&ip[1],&ip[2],&ip[3],&port[0],&port[1]);
+		printf("Port received though PORT command return: %d\n",port[0]*256+port[1]);
+		ftp->data.port=0;
+		if (portConnect(&(ftp->data.sockfd), &(ftp->data.port), ftp->host, port[0]*256+port[1]))
 		{
 			printf("[ERROR] Could not connect to FTP service at %s\n", ftp->host);
 			return 1;
@@ -246,6 +234,12 @@ int ftp_loop(struct FTPClient *ftp)
     char cmd[BUFFSIZE_VAR];
     char data[BUFFSIZE_DATA];
 
+	char *response,*st;
+	int command_code;
+	int size;
+	//printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+	//printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
+
 	printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
 	printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
 
@@ -255,10 +249,15 @@ int ftp_loop(struct FTPClient *ftp)
 	{
         printf("ftp> ");
         fgets(input, BUFFSIZE_VAR, stdin);
-
+		if (strstr(input," ")!=NULL)
+		{
+			sscanf(input,"%s %s",&input,&st);
+		}
         if (strstr(input, "ls"))
 		{
-			printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
+			sprintf(cmd,"LIST\r\n");
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			printf("%s", response);
 			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
 		} else if (strstr(input, "dir"))
 		{
@@ -266,17 +265,57 @@ int ftp_loop(struct FTPClient *ftp)
 			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
 		} else if (strstr(input, "pwd"))
 		{
-			printf("%s", ftp_comm(ftp->cmd.sockfd, "PWD\r\n", strlen("PWD\r\n")));
-			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+			sprintf(cmd,"PWD\r\n");
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			printf("%s", response);
+			sscanf(response,"%d", &command_code);
+			if (command_code !=257)
+			{
+				printf("ERROR");
+				return NULL;
+			}
+			sscanf(response,"%d \"%s \" ", &command_code,&data);
+			data[strlen(data)-1] = '\0';
+			printf("Thu muc hien hanh:%s\n",data);
 		} else if (strstr(input, "nlist"))
 		{
-			printf("%s", ftp_comm(ftp->cmd.sockfd, "NLST\r\n", strlen("NLST\r\n")));
+			printf("%s", ftp_comm(ftp->cmd.sockfd, "NLIST\r\n", strlen("NLIST\r\n")));
 			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
 		} else if (strstr(input, "bye"))
 		{
-			printf("%s", ftp_comm(ftp->cmd.sockfd, "QUIT\r\n", strlen("QUIT\r\n")));
-			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+			sprintf(cmd,"QUIT\r\n");
+			printf("%s", ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd)));
+			printf("FTP client will exit now");
 			break;
+		} else if (strstr(input, "cd"))
+		{
+			sprintf(cmd,"CWD %s\r\n",st);
+			response = ftp_comm(ftp->cmd.sockfd, cmd,strlen(cmd));
+			printf("%s", response);
+		} else if (strstr(input, "cdup"))
+		{
+			sprintf(cmd,"CDUP \r\n");
+			response = ftp_comm(ftp->cmd.sockfd, cmd,strlen(cmd));
+			printf("%s", response);
+		} else if (strstr(input,"mkdir"))
+		{
+			sprintf(cmd,"MKD %s\r\n",st);
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			printf("%s", response);
+		} else if(strstr(input, "delete"))
+		{
+			sprintf(cmd,"DELE %s",st);
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			printf("%s", response);
+		} else if(strstr(input,"download"))
+		{
+			char filename[BUFFSIZE_DATA];
+			printf("File you want to download:");scanf("%s",filename);
+			sprintf(cmd,"RETR %s\r\n",filename);
+			response = ftp_comm(ftp->cmd.sockfd,cmd,strlen(cmd));
+		} else
+		{
+			printf("Khong ho tro lenh nay.\nMoi nhap lai.|n");
 		}
 	}
 }
