@@ -3,8 +3,8 @@
 
 #include "type.h"
 
-#define BUFFSIZE_VAR	200
-#define BUFFSIZE_DATA	1000
+#define BUFFSIZE_VAR	1024
+#define BUFFSIZE_DATA	1024*1024
 
 #define FTP_CMD_PORT	21
 
