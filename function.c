@@ -245,8 +245,9 @@ int ftp_loop(struct FTPClient *ftp)
         fgets(input, BUFFSIZE_VAR, stdin);
 		if (strstr(input," ")!=NULL)
 		{
-			sscanf(input,"%s %s",&st1,&st);
+			sscanf(input,"%s %s", st1, st);
 		}
+
         if (strstr(input, "ls"))
 		{
 			char *data;
@@ -336,7 +337,7 @@ int ftp_loop(struct FTPClient *ftp)
 				int flag=0;
 				printf("1");
 				data = ftp_comm(ftp->data.sockfd, NULL, 0);
-				
+
 				response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
 				printf("%s",response);
 				for (int i=0;i<strlen(data);i++)
@@ -348,7 +349,7 @@ int ftp_loop(struct FTPClient *ftp)
 				if (flag==0)
 					break;
 			}
-			
+
 			fclose(fo);
 		//UPLOAD
 		} else if(strstr(input,"upload"))
@@ -356,17 +357,26 @@ int ftp_loop(struct FTPClient *ftp)
 			FILE *fin;
 			char data[BUFFSIZE_DATA];
 			char *response;
-			fin = fopen(st,"rb");
+			printf("[INFO] Opening file %s for reading\n", st);
+			fin = fopen(st, "rb");
+
+
 			sprintf(cmd,"STOR %s\r\n",st);
 			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
 			printf("%s",response);
-			int flag;
-			while ((flag = read(fin,data,BUFFSIZE_DATA))>0)
-			{
-				response = ftp_comm(ftp->data.sockfd,data,strlen(data));
-				printf("%s",response);
-			}
-				
+
+			fseek(fin, 0L, SEEK_END);
+			int filesize = ftell(fin);
+			fseek(fin, 0L, SEEK_SET);
+			fread(data, filesize, 1, fin);
+			fwrite(data, filesize, 1, stdout);
+
+			ftp_comm(ftp->data.sockfd, data, filesize);
+
+			response = ftp_comm(ftp->cmd.sockfd, NULL, 0);
+			printf("%s",response);
+
+
 			fclose(fin);
 		} else
 		{

@@ -34,7 +34,7 @@ int main(int argc,char *argv[])
 
     // Default FTP mode is active
     //ftp.mode = FTP_ACTIVE;
-	ftp.mode = FTP_PASSIVE;
+	ftp.mode = FTP_ACTIVE;
 	if (ftp_connect(&ftp))
 		return 1;
 
