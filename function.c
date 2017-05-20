@@ -221,9 +221,9 @@ char* ftp_comm(int sockfd, char* data, int len)
 			break;
     }
 
-	char* response = (char*)malloc(BUFFSIZE_VAR);
-    memset(response, 0, BUFFSIZE_VAR);
-    read(sockfd, response, BUFFSIZE_VAR);
+	char* response = (char*)malloc(BUFFSIZE_DATA);
+    memset(response, 0, BUFFSIZE_DATA);
+    read(sockfd, response, BUFFSIZE_DATA);
 
 	return response;
 }
@@ -231,19 +231,13 @@ char* ftp_comm(int sockfd, char* data, int len)
 int ftp_loop(struct FTPClient *ftp)
 {
 	char input[BUFFSIZE_VAR];
+	char st[BUFFSIZE_VAR];
+	char st1[BUFFSIZE_VAR];
     char cmd[BUFFSIZE_VAR];
-    char data[BUFFSIZE_DATA];
-
-	char *response,*st;
+	char data[BUFFSIZE_DATA];
+	char *response;
 	int command_code;
 	int size;
-	//printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
-	//printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
-
-	printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
-	printf("%s", ftp_comm(ftp->data.sockfd, NULL, 0));
-
-	return 1;
 
     while (1)
 	{
@@ -251,14 +245,29 @@ int ftp_loop(struct FTPClient *ftp)
         fgets(input, BUFFSIZE_VAR, stdin);
 		if (strstr(input," ")!=NULL)
 		{
-			sscanf(input,"%s %s",&input,&st);
+			sscanf(input,"%s %s",&st1,&st);
 		}
         if (strstr(input, "ls"))
 		{
+			char *data;
 			sprintf(cmd,"LIST\r\n");
 			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
 			printf("%s", response);
-			printf("%s\n", ftp_comm(ftp->data.sockfd, NULL, 0));
+			while(1)
+			{
+				int flag=0;
+				data = ftp_comm(ftp->data.sockfd, NULL, 0);
+				printf("%s",data);
+				for (int i=0;i<strlen(data);i++)
+					if (data[i]!=0)
+					{
+						flag=1;
+						break;
+					}
+				if (flag==0)
+					break;
+			}
+			printf("%s",ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd)));
 		} else if (strstr(input, "dir"))
 		{
 			printf("%s", ftp_comm(ftp->cmd.sockfd, "LIST\r\n", strlen("LIST\r\n")));
@@ -289,7 +298,7 @@ int ftp_loop(struct FTPClient *ftp)
 			break;
 		} else if (strstr(input, "cd"))
 		{
-			sprintf(cmd,"CWD %s\r\n",st);
+			sprintf(cmd,"CWD %s\r\n",&st);
 			response = ftp_comm(ftp->cmd.sockfd, cmd,strlen(cmd));
 			printf("%s", response);
 		} else if (strstr(input, "cdup"))
@@ -304,18 +313,64 @@ int ftp_loop(struct FTPClient *ftp)
 			printf("%s", response);
 		} else if(strstr(input, "delete"))
 		{
-			sprintf(cmd,"DELE %s",st);
+			sprintf(cmd,"DELE %s\r\n",st);
 			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
 			printf("%s", response);
+		//DOWNLOAD
 		} else if(strstr(input,"download"))
 		{
 			char filename[BUFFSIZE_DATA];
-			printf("File you want to download:");scanf("%s",filename);
-			sprintf(cmd,"RETR %s\r\n",filename);
-			response = ftp_comm(ftp->cmd.sockfd,cmd,strlen(cmd));
+			char *data;
+			FILE *fo;
+			fo = fopen(st,"w");
+			sprintf(cmd,"RETR %s\r\n", st);
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			//printf("%s",response);
+			data = ftp_comm(ftp->data.sockfd, NULL, 0);
+			//printf("%s",data);
+			printf("abc");
+			while(1)
+			{
+				//fwrite(data,strlen(data)+1,1,fo);
+				fputs(data,fo);
+				int flag=0;
+				printf("1");
+				data = ftp_comm(ftp->data.sockfd, NULL, 0);
+				
+				response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+				printf("%s",response);
+				for (int i=0;i<strlen(data);i++)
+					if (data[i]!=0)
+					{
+						flag=1;
+						break;
+					}
+				if (flag==0)
+					break;
+			}
+			
+			fclose(fo);
+		//UPLOAD
+		} else if(strstr(input,"upload"))
+		{
+			FILE *fin;
+			char data[BUFFSIZE_DATA];
+			char *response;
+			fin = fopen(st,"rb");
+			sprintf(cmd,"STOR %s\r\n",st);
+			response = ftp_comm(ftp->cmd.sockfd, cmd, strlen(cmd));
+			printf("%s",response);
+			int flag;
+			while ((flag = read(fin,data,BUFFSIZE_DATA))>0)
+			{
+				response = ftp_comm(ftp->data.sockfd,data,strlen(data));
+				printf("%s",response);
+			}
+				
+			fclose(fin);
 		} else
 		{
-			printf("Khong ho tro lenh nay.\nMoi nhap lai.|n");
+			printf("Khong ho tro lenh nay.\nMoi nhap lai.\n");
 		}
 	}
 }
